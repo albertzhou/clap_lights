@@ -46,7 +46,7 @@ def play_wave():
 	p.terminate()
 
 def main():
-	CHUNK = 1024 * 4 # 4096 samples per chunk
+	CHUNK = 1024 * 6 # 4096 samples per chunk
 	FORMAT = pyaudio.paInt16
 	CHANNELS = 1
 	RATE = 44100 # 44.1KHZ samples per second
@@ -66,21 +66,27 @@ def main():
 
 	fig, ax = plt.subplots()
 
+	plt.title("Audio Waveform Viewer")
+	plt.xlabel("samples")
+	plt.ylabel("volume")
+
 	x = np.arange(0, 2 * CHUNK, 2)
-	line, = ax.plot(x, np.random.rand(CHUNK))
-	ax.set_ylim(0, 255)
+	line, = ax.plot(x, np.random.rand(CHUNK)) # initialize random array to be overwritten
+	ax.set_ylim(-255, 255)
 	ax.set_xlim(0, CHUNK)
 	
 	while True:
 		data = stream.read(CHUNK)
-		data_int = np.array(struct.unpack(str(2 * CHUNK) + 'B', data), dtype='b')[::2] + 150
+		data_int = np.array(struct.unpack(str(2 * CHUNK) + 'B', data), dtype='b')[::2]
 		line.set_ydata(data_int)
 		fig.canvas.draw()
 		fig.canvas.flush_events()
 		plt.show(block=False)
 
-
 		# print(data_int)
+
+def fourier_transform():
+	x = 0
 
 if __name__ == '__main__':
 	# play_wave()
