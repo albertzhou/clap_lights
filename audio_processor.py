@@ -64,15 +64,18 @@ def main():
 
 	plt.show(block=False)
 
-	fig, ax = plt.subplots()
+	fig, (wave_ax, freq_ax) = plt.subplots(2, figsize=(12, 6))
 
 	plt.title("Audio Waveform Viewer")
 	plt.xlabel("samples")
 	plt.ylabel("volume")
 
+	# plotting variables
 	x = np.arange(0, 2 * CHUNK, 2)
-	line, = ax.plot(x, np.random.rand(CHUNK)) # initialize random array to be overwritten
-	ax.set_ylim(-255, 255)
+	x_fft = np.linspace(0, RATE, CHUNK) # x fft plotting limit is rate (44.1khz), CHUNK 
+
+	line, = wave_ax.plot(x, np.random.rand(CHUNK)) # initialize random array to be overwritten
+	ax.set_ylim(-200, 200)
 	ax.set_xlim(0, CHUNK)
 	
 	while True:
