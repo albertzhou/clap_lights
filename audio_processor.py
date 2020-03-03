@@ -70,16 +70,18 @@ def main():
 	line, = ax.plot(x, np.random.rand(CHUNK))
 	ax.set_ylim(0, 255)
 	ax.set_xlim(0, CHUNK)
-
+	
 	while True:
 		data = stream.read(CHUNK)
-		data_int = np.array(struct.unpack(str(2 * CHUNK) + 'B', data), dtype='b')[::2] + 127
+		data_int = np.array(struct.unpack(str(2 * CHUNK) + 'B', data), dtype='b')[::2] + 150
 		line.set_ydata(data_int)
 		fig.canvas.draw()
 		fig.canvas.flush_events()
+		plt.show(block=False)
 
-		print(data_int)
+
+		# print(data_int)
 
 if __name__ == '__main__':
-	play_wave()
+	# play_wave()
 	main()
