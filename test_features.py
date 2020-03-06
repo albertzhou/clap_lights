@@ -1,17 +1,24 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import time
+from scipy import fftpack
+
+f = 10 # frequency
+f_s = 100 # sampling rate
+
+t = np.linspace(0, 2, 2*f_s, endpoint=False) # create time values for raw data
+x = np.sin(f * 2 * np.pi * t)
+
+x_freq = fftpack.fft(x)
+freqs = fftpack.fftfreq(len(x)) * f_s
+
+print(x_freq) # y axis (but only positive part)
+print(freqs) # x axis
 
 fig, ax = plt.subplots()
-line, = ax.plot(np.random.randn(100))
 
-tstart = time.time()
-num_plots = 0
-while time.time()-tstart < 1:
-    line.set_ydata(np.random.randn(100))
-    fig.canvas.draw()
-    fig.canvas.flush_events()
-    num_plots += 1
-    plt.show(block=False)
-    time.sleep(.01)
-print(num_plots)
+ax.stem(freqs, np.abs(x_freq))
+ax.set_xlim(0, f_s / 2)
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Frequency Amplitude')
+
+plt.show()
