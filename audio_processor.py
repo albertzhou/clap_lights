@@ -8,13 +8,13 @@ import sys
 import os
 from scipy import fftpack
 
-CHUNK = 1024 * 6 # 4096 samples per chunk
+CHUNK = 1024 * 4 # 4096 samples per chunk
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100 # 44.1KHZ samples per second
 
 def play_wave():
-	# wf = wave.open(sys.argv[1], 'rb')
+	# wf = wave.open(sys.argv[1], 'rb') # uncomment if multiple wav files
 	wf = wave.open("CantinaBand3.wav", 'rb')
 
 	# get information about wav file
@@ -30,17 +30,17 @@ def play_wave():
 
 	# open stream (2)
 	stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-	                channels=wf.getnchannels(),
-	                rate=wf.getframerate(),
-	                output=True)
+						channels=wf.getnchannels(),
+						rate=wf.getframerate(),
+						output=True)
 
 	# read data
 	data = wf.readframes(CHUNK)
 
 	# play stream (3)
 	while len(data) > 0:
-	    stream.write(data)
-	    data = wf.readframes(CHUNK)
+		stream.write(data)
+		data = wf.readframes(CHUNK)
 
 	# stop stream (4)
 	stream.stop_stream()
@@ -67,7 +67,7 @@ def main():
 	x = np.arange(0, 2 * CHUNK, 2)
 	x_freq = np.linspace(0, RATE, CHUNK) # array from 0 to 44.1khz in increments of (6*1024)
 
-	line, = wave_ax.plot(x, np.random.rand(CHUNK)) # initialize random array to be overwritten
+	line, = wave_ax.plot(x, np.random.rand(CHUNK)) # initialize random arrays to be overwritten in loop
 	line_freq, = freq_ax.plot(x_freq, np.random.rand(CHUNK))
 
 	wave_ax.set_ylim(-150, 150)
@@ -88,15 +88,27 @@ def main():
 		data_int = np.array(struct.unpack(str(2 * CHUNK) + 'B', data), dtype='b')[::2]
 		line.set_ydata(data_int)
 		
-		# draw frequency spectrum
-		x_freq = fftpack.fft(data_int)
-		line_freq.set_ydata(np.abs(x_freq) / CHUNK)
+		# calculate frequency power and parameters
+		freq = fftpack.fft(data_int)
+		power = np.abs(freq) # freq magnitude
 
+		pos_mask = np.where(freq > 0) # choose only positive frequencies
+		freq_pos = x_freq[pos_mask] # unused for now
+		peak_freq = freq_pos[power[pos_mask].argmax()] # return the frequency with highest magnitude
+
+		line_freq.set_ydata(power / CHUNK) 
+
+		# draw
 		fig.canvas.draw()
 		fig.canvas.flush_events()
 		plt.show(block=False)
 
-		# print(data_int)
+		# power is of size CHUNK, array of magnitudes of all frequencies from 0 to 22khz
+		print(peak_freq)
+
+# determines whether a clap occurred
+def determine_clap():
+	x = 0
 
 if __name__ == '__main__':
 	# play_wave()
