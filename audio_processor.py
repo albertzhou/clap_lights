@@ -49,10 +49,9 @@ def play_wave():
 	# close PyAudio (5)
 	p.terminate()
 
-def main():
-	p = pyaudio.PyAudio()
+def visualize_audio(pyaudio_obj):
 
-	stream = p.open(
+	stream = pyaudio_obj.open(
 		format=FORMAT,
 		channels=CHANNELS,
 		rate=RATE,
@@ -109,6 +108,10 @@ def main():
 # determines whether a clap occurred
 def determine_clap():
 	x = 0
+	
+def main():
+	p = pyaudio.PyAudio()
+	visualize_audio(p)
 
 if __name__ == '__main__':
 	# play_wave()
