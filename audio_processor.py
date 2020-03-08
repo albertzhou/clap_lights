@@ -13,7 +13,9 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100 # 44.1KHZ samples per second
 
-def play_wave():
+np.set_printoptions(threshold=sys.maxsize)
+
+def play_wave(pyaudio_obj):
 	# wf = wave.open(sys.argv[1], 'rb') # uncomment if multiple wav files
 	wf = wave.open("CantinaBand3.wav", 'rb')
 
@@ -37,19 +39,19 @@ def play_wave():
 	# read data
 	data = wf.readframes(CHUNK)
 
-	# play stream (3)
+	# play stream
 	while len(data) > 0:
 		stream.write(data)
 		data = wf.readframes(CHUNK)
 
-	# stop stream (4)
+	# stop stream
 	stream.stop_stream()
 	stream.close()
 
-	# close PyAudio (5)
+	# close PyAudio
 	p.terminate()
 
-def visualize_audio(pyaudio_obj):
+def visualize_audio_stream(pyaudio_obj):
 
 	stream = pyaudio_obj.open(
 		format=FORMAT,
@@ -103,16 +105,20 @@ def visualize_audio(pyaudio_obj):
 		plt.show(block=False)
 
 		# power is of size CHUNK, array of magnitudes of all frequencies from 0 to 22khz
-		print(peak_freq)
+		# print(peak_freq)
+		determine_clap(110, 3000, data_int)
 
-# determines whether a clap occurred
-def determine_clap():
-	x = 0
-	
+# determines whether a clap occurred based on magnitude:
+# criteria for clap: must exceed magnitude of 110 3000 samples after first.
+def determine_clap(magnitude_threshold, clap_length, data_int):
+	if (np.size(np.where(data_int > 120)) > 0):
+		print(np.where(data_int > 120))
+
+
 def main():
 	p = pyaudio.PyAudio()
-	visualize_audio(p)
+	# play_wave(p)
+	visualize_audio_stream(p)
 
 if __name__ == '__main__':
-	# play_wave()
 	main()
