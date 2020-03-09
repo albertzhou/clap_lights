@@ -8,11 +8,20 @@ import sys
 import os
 from scipy import fftpack
 
+import ethernet
+
+## Configuration variables - adjust to suit needs
+# Pyaudio configuration
 CHUNK = 1024 * 4 # 4096 samples per chunk
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100 # 44.1KHZ samples per second
 
+# Ethernet Configuration
+TARGET_IP = "192.168.1.177"
+TARGET_PORT = 23
+
+# Numpy configuration
 np.set_printoptions(threshold=sys.maxsize)
 
 def play_wave(pyaudio_obj):
@@ -106,14 +115,26 @@ def visualize_audio_stream(pyaudio_obj):
 
 		# power is of size CHUNK, array of magnitudes of all frequencies from 0 to 22khz
 		# print(peak_freq)
-		determine_clap(110, 3000, data_int)
+		clap_present = determine_clap(123, 3000, data_int)
 
 # determines whether a clap occurred based on magnitude:
 # criteria for clap: must exceed magnitude of 110 3000 samples after first.
-def determine_clap(magnitude_threshold, clap_length, data_int):
-	if (np.size(np.where(data_int > 120)) > 0):
-		print(np.where(data_int > 120))
+def determine_clap(magnitude_threshold, clap_length, data_int, power):
+	clap_present = False
+	if (np.size(np.where(data_int > magnitude_threshold)) > 0):
+		loud_locations = np.where(data_int > 120)
 
+		initial_clap = loud_locations[0][0]
+		last_clap = loud_locations[0][-1]
+		if (last_clap - initial_clap > clap_length):
+			clap_present = True
+			print("detected a clap")
+		else:
+			clap_present = False
+	else:
+		clap_present = False
+
+	return False
 
 def main():
 	p = pyaudio.PyAudio()
