@@ -115,7 +115,7 @@ def visualize_audio_stream(pyaudio_obj):
 
 		# power is of size CHUNK, array of magnitudes of all frequencies from 0 to 22khz
 		# print(peak_freq)
-		clap_present = determine_clap(123, 3000, data_int)
+		clap_present = determine_clap(123, 3500, data_int, power)
 
 # determines whether a clap occurred based on magnitude:
 # criteria for clap: must exceed magnitude of 110 3000 samples after first.
