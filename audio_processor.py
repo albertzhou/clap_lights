@@ -165,6 +165,7 @@ def determine_peak_freq(stream, x_freq, freq, power):
 def toggle_lights(current_clap_time, last_clap_time):
 	seconds_between_claps = (current_clap_time - last_clap_time).total_seconds()
 	print(seconds_between_claps)
+	
 	if (seconds_between_claps > 0.5 and seconds_between_claps < 2):
 		print("toggling lights")
 
