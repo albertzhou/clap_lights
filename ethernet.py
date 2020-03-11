@@ -2,9 +2,7 @@ import socket
 import time
 import json
 
-# send message to designated IP and port, python is the client, IPDU is the server
-# message options (send string to IPDU to perform command)
-# analog_update - requests raw analog values
+# send message to designated IP and port, python is the client
 def send_message(IP, Port, Msg):
 	TCP_IP = IP # IP in String form
 	TCP_PORT = Port # Port in int form, defined here
@@ -16,6 +14,7 @@ def send_message(IP, Port, Msg):
 
 	# send message
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	print("stuck here")
 	s.connect((TCP_IP, TCP_PORT))
 	s.send(MESSAGE)
 
@@ -28,7 +27,7 @@ def receive_message(IP, Port): # update this to work without sending random byte
 	TCP_PORT = Port # Port in int form, defined here
 
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((TCP_IP, TCP_PORT))
+	s.connect((TCP_IP, TCP_PORT)) # gets stuck on connect and send
 	s.send("a")
 	data = process_crlf(s, "\r\n")
 	print("Received data: " + data)
@@ -42,5 +41,5 @@ def process_crlf(s, crlf):
 	return data
 
 if __name__ == '__main__':
-	send_message(IPDU_IP, IPDU_Port, "analog_update")
+	send_message(IPDU_IP, IPDU_Port, "test")
 	# receive_message(IPDU_IP, IPDU_Port)

@@ -2,6 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import fftpack
 
+import datetime
+import time
+
 def fft_test():
 	f = 10 # frequency
 	f_s = 100 # sampling rate
@@ -24,12 +27,25 @@ def fft_test():
 
 	plt.show()
 
-def numpy_where():
+def numpy_where_test():
 	a = np.arange(10)
 	print(np.where(a < 4))
 
+def datetime_test():
+	time_1 = datetime.datetime.now()
+	time.sleep(3)
+	time_2 = datetime.datetime.now()
+
+	delta_time = time_2 - time_1
+
+	delta_time_s = delta_time.total_seconds()
+
+	print(time_1)
+	print(time_2)
+	print(delta_time_s)
+
 def main():
-	numpy_where()
+	datetime_test()
 
 if __name__ == '__main__':
 	main()
