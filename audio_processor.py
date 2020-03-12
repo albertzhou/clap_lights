@@ -15,7 +15,7 @@ import serial
 
 ## Configuration variables - adjust to suit needs
 # audio processor configuration
-SENSITIVITY = 120 # choose value between 10-124 (124 is most sensitive to clap)
+SENSITIVITY = 120 # choose value between 60-124 (60 is most sensitive to clap)
 
 # Pyaudio configuration
 CHUNK = 1024 * 10 # 4096 samples per chunk
