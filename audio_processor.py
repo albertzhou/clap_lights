@@ -95,44 +95,55 @@ def visualize_audio_stream(pyaudio_obj):
 
 	clap_present = False
 
-	current_clap_time = datetime(1996, 10, 21, 0, 0)
-	last_clap_time = datetime(1996, 11, 10 , 0, 0)
+	first_clap_time = datetime(1996, 11, 10 , 0, 0)
+	first_clap = False
+	last_clap_time = datetime(1996, 11, 10, 0, 0)
 
+	# main loop
 	while True:		
 		# draw waveform
 		data_int, power, freq = process_waveform(stream)
-		line.set_ydata(data_int)
-
-		line_freq.set_ydata(power / CHUNK) 
 		
 		peak_freq = determine_peak_freq(stream, x_freq, freq, power)
 		
 		# draw (uncomment block for visualizer)
+		# line.set_ydata(data_int)
+		# line_freq.set_ydata(power / CHUNK) 
 		# fig.canvas.draw()
 		# fig.canvas.flush_events()
 		# plt.show(block=False)
 
-		if (clap_present): # conditional to prevent repeated clap detection in too short of time frame
-			clap_present = False
+		clap_present = determine_clap(123, 6000, data_int, power, last_clap_time)
+		current_time = datetime.now()
+		
+		if (clap_present and not first_clap):	
+			first_clap_time = current_time
+			first_clap = True
+		elif (clap_present and first_clap):
+			toggle_lights()
 
-			last_clap_time = current_clap_time
-			current_clap_time = datetime.now()
-			toggle_lights(current_clap_time, last_clap_time)
+		time_since_first_clap = (current_time - first_clap_time).total_seconds()
 
-		else: 		
-			clap_present = determine_clap(123, 6000, data_int, power, peak_freq)
-		# print(peak_freq)
+		# reset first clap if no second clap within maximum time frame
+		if (time_since_first_clap > 1):
+			first_clap = False
 
 # determines whether a clap occurred based on magnitude:
 # criteria for clap: must exceed magnitude_threshold, and be still exceed after 3000 but not 8000 samples after (at 44.1khz SR)
-def determine_clap(magnitude_threshold, clap_length, data_int, power, peak_freq):
-	clap_present = False
+def determine_clap(magnitude_threshold, clap_length, data_int, power, last_clap_time):
+	current_time = datetime.now()
+	time_since_clap = (current_time - last_clap_time).total_seconds()
+
+	if (time_since_clap < 0.25):
+		return False
+
 	if (np.size(np.where(data_int > magnitude_threshold)) > 0):
 		loud_locations = np.where(data_int > 120)
 
 		initial_sound = loud_locations[0][0]
 		last_sound = loud_locations[0][-1]
 		sound_duration = last_sound - initial_sound
+
 		if (sound_duration > clap_length):
 			clap_present = True
 			# ethernet.send_message(TARGET_IP, TARGET_PORT, "Clap Detected")
@@ -147,10 +158,10 @@ def determine_clap(magnitude_threshold, clap_length, data_int, power, peak_freq)
 def process_waveform(stream):
 	data = stream.read(CHUNK)
 	data_int = np.array(struct.unpack(str(2 * CHUNK) + 'B', data), dtype='b')[::2]
+	
 	# calculate frequency power and parameters
 	freq = fftpack.fft(data_int)
 	power = np.abs(freq) # power is of size CHUNK, array of magnitudes of all frequencies from 0 to 22khz
-
 
 	return [data_int, power, freq]
 
@@ -161,12 +172,8 @@ def determine_peak_freq(stream, x_freq, freq, power):
 
 	return peak_freq
 
-# IF two claps detected between 0.5 and 2 seconds apart, toggle lights by sending message to arduino over serial
-def toggle_lights(current_clap_time, last_clap_time):
-	seconds_between_claps = (current_clap_time - last_clap_time).total_seconds()
-	print(seconds_between_claps)
-	
-	if (seconds_between_claps > 0.5 and seconds_between_claps < 2):
+# toggle lights by sending message to arduino over serial
+def toggle_lights():
 		print("toggling lights")
 
 def main():
