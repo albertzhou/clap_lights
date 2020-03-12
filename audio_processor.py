@@ -11,8 +11,12 @@ from scipy import fftpack
 from datetime import datetime
 
 import ethernet
+import serial
 
 ## Configuration variables - adjust to suit needs
+# audio processor configuration
+SENSITIVITY = 120 # choose value between 10-124 (124 is most sensitive to clap)
+
 # Pyaudio configuration
 CHUNK = 1024 * 10 # 4096 samples per chunk
 FORMAT = pyaudio.paInt16
@@ -22,6 +26,9 @@ RATE = 44100 # 44.1KHZ samples per second
 # Ethernet Configuration
 TARGET_IP = "192.168.1.177"
 TARGET_PORT = 23
+
+# Serial Configuration
+MCU_SERIAL_PORT = '/dev/ttyS2'
 
 # Numpy configuration
 np.set_printoptions(threshold=sys.maxsize)
@@ -113,7 +120,7 @@ def visualize_audio_stream(pyaudio_obj):
 		# fig.canvas.flush_events()
 		# plt.show(block=False)
 
-		clap_present = determine_clap(123, 6000, data_int, power, last_clap_time)
+		clap_present = determine_clap(SENSITIVITY, 6000, data_int, power, last_clap_time)
 		current_time = datetime.now()
 		
 		if (clap_present and not first_clap):	
@@ -175,6 +182,8 @@ def determine_peak_freq(stream, x_freq, freq, power):
 # toggle lights by sending message to arduino over serial
 def toggle_lights():
 		print("toggling lights")
+		# ser = serial.Serial(MCU_SERIAL_PORT, 9600, timeout=1)
+		# MCU_SERIAL_PORT.write("toggle light")
 
 def main():
 	p = pyaudio.PyAudio()
