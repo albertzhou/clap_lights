@@ -28,7 +28,7 @@ TARGET_IP = "192.168.1.177"
 TARGET_PORT = 23
 
 # Serial Configuration
-MCU_SERIAL_PORT = '/dev/ttyS2'
+MCU_SERIAL_PORT = '/dev/ttyACM0'
 
 # Numpy configuration
 np.set_printoptions(threshold=sys.maxsize)
@@ -182,8 +182,8 @@ def determine_peak_freq(stream, x_freq, freq, power):
 # toggle lights by sending message to arduino over serial
 def toggle_lights():
 		print("toggling lights")
-		# ser = serial.Serial(MCU_SERIAL_PORT, 9600, timeout=1)
-		# MCU_SERIAL_PORT.write("toggle light")
+		mcu = serial.Serial(MCU_SERIAL_PORT, 9600, timeout=1)
+		mcu.write("toggle light".encode())
 
 def main():
 	p = pyaudio.PyAudio()
