@@ -44,8 +44,55 @@ def datetime_test():
 	print(time_2)
 	print(delta_time_s)
 
-def main():
-	datetime_test()
+def set_y_data():
+	x = np.arange(-3, 3, .1)
+	y = np.sin( np.pi*x)
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	#plot a line along points x,y
+	line, = ax.plot(x, y)
+	#update data
+	j = 2
+	y2 = np.sin( np.pi*x*j ) / ( np.pi*x*j )
+	#update the line with the new data
+	line.set_ydata(y2)
 
+	print(x)
+	print(y2)
+
+	plt.show()
+
+def hp_filter():
+	import numpy as np
+	from scipy.fftpack import rfft, irfft, fftfreq
+
+	time   = np.linspace(0,10,2000)
+	signal = np.cos(5*np.pi*time) + np.cos(7*np.pi*time)
+
+	W = fftfreq(signal.size, d=time[1]-time[0])
+	f_signal = rfft(signal)
+
+	# If our original signal time was in seconds, this is now in Hz    
+	cut_f_signal = f_signal.copy()
+	cut_f_signal[(W<6)] = 0
+
+	cut_signal = irfft(cut_f_signal)
+
+	import pylab as plt
+	plt.subplot(221)
+	plt.plot(time,signal)
+	plt.subplot(222)
+	plt.plot(W,f_signal)
+	plt.xlim(0,10)
+	plt.subplot(223)
+	plt.plot(W,cut_f_signal)
+	plt.xlim(0,10)
+	plt.subplot(224)
+	plt.plot(time,cut_signal)
+	plt.show()
+
+def main():
+	hp_filter()
+	
 if __name__ == '__main__':
 	main()

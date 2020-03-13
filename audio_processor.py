@@ -9,13 +9,15 @@ import os
 from scipy import fftpack
 
 from datetime import datetime
+import time
 
 import ethernet
 import serial
 
 ## Configuration variables - adjust to suit needs
 # audio processor configuration
-SENSITIVITY = 120 # choose value between 60-124 (60 is most sensitive to clap)
+AMP_SENSTIVITY = 120 # choose value between 60-124 - loudness threshold for clap
+DUR_SENSITIVITY = 3250 # choose value between 1500-4500 - clap duration threshold
 
 # Pyaudio configuration
 CHUNK = 1024 * 10 # 4096 samples per chunk
@@ -84,7 +86,7 @@ def visualize_audio_stream(pyaudio_obj):
 
 	# plotting variables
 	x = np.arange(0, 2 * CHUNK, 2)
-	x_freq = np.linspace(0, RATE, CHUNK) # array from 0 to 44.1khz in increments of (6*1024)
+	x_freq = np.linspace(0, RATE, CHUNK) # array from 0 to 44.1khz in increments of (CHUNK)
 
 	line, = wave_ax.plot(x, np.random.rand(CHUNK)) # initialize random arrays to be overwritten in loop
 	line_freq, = freq_ax.plot(x_freq, np.random.rand(CHUNK))
@@ -119,8 +121,10 @@ def visualize_audio_stream(pyaudio_obj):
 		# fig.canvas.draw()
 		# fig.canvas.flush_events()
 		# plt.show(block=False)
+		
+		# peak_freq = determine_peak_freq(stream, x_freq, freq, power)
 
-		clap_present = determine_clap(SENSITIVITY, 6000, data_int, power, last_clap_time)
+		clap_present = determine_clap(AMP_SENSTIVITY, DUR_SENSITIVITY, data_int, power, last_clap_time)
 		current_time = datetime.now()
 		
 		if (clap_present and not first_clap):	
@@ -136,29 +140,30 @@ def visualize_audio_stream(pyaudio_obj):
 			first_clap = False
 
 # determines whether a clap occurred based on magnitude:
-# criteria for clap: must exceed magnitude_threshold, and be still exceed after 3000 but not 8000 samples after (at 44.1khz SR)
 def determine_clap(magnitude_threshold, clap_length, data_int, power, last_clap_time):
 	current_time = datetime.now()
 	time_since_clap = (current_time - last_clap_time).total_seconds()
 
-	if (time_since_clap < 0.25):
+	if (time_since_clap < 0.1):
 		return False
 
-	if (np.size(np.where(data_int > magnitude_threshold)) > 0):
-		loud_locations = np.where(data_int > 120)
+	loud_locations = np.where(data_int > magnitude_threshold)
 
+	if (np.size(loud_locations) > 0):
 		initial_sound = loud_locations[0][0]
 		last_sound = loud_locations[0][-1]
 		sound_duration = last_sound - initial_sound
 
 		if (sound_duration > clap_length):
 			clap_present = True
+			last_clap_time = current_time
 			# ethernet.send_message(TARGET_IP, TARGET_PORT, "Clap Detected")
 			print("detected a clap")
 		else:
 			clap_present = False
 	else:
 		clap_present = False
+
 
 	return clap_present
 
@@ -183,7 +188,8 @@ def determine_peak_freq(stream, x_freq, freq, power):
 def toggle_lights():
 		print("toggling lights")
 		mcu = serial.Serial(MCU_SERIAL_PORT, 9600, timeout=1)
-		mcu.write("toggle light".encode())
+		mcu.write("t".encode())
+		mcu.close()
 
 def main():
 	p = pyaudio.PyAudio()
