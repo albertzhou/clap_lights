@@ -91,8 +91,24 @@ def hp_filter():
 	plt.plot(time,cut_signal)
 	plt.show()
 
+def serial_read():
+
+	import serial
+	import sys
+	import time
+
+	port = "/dev/ttyACM0"
+
+	baudrate = 9600
+
+	ser = serial.Serial(port, baudrate)
+
+	while 1:
+	    print(ser.readline().decode('utf-8'))
+	    sys.stdout.flush()
+
 def main():
-	hp_filter()
-	
+	serial_read()
+
 if __name__ == '__main__':
 	main()

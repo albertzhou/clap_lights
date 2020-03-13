@@ -17,10 +17,10 @@ import serial
 ## Configuration variables - adjust to suit needs
 # audio processor configuration
 AMP_SENSTIVITY = 120 # choose value between 60-124 - loudness threshold for clap
-DUR_SENSITIVITY = 3250 # choose value between 1500-4500 - clap duration threshold
+DUR_SENSITIVITY = 2000 # choose value between 1500-4500 - clap duration threshold
 
 # Pyaudio configuration
-CHUNK = 1024 * 10 # 4096 samples per chunk
+CHUNK = 1024 * 10 # samples per chunk
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100 # 44.1KHZ samples per second
@@ -124,7 +124,7 @@ def visualize_audio_stream(pyaudio_obj):
 		
 		# peak_freq = determine_peak_freq(stream, x_freq, freq, power)
 
-		clap_present = determine_clap(AMP_SENSTIVITY, DUR_SENSITIVITY, data_int, power, last_clap_time)
+		clap_present = determine_clap(stream, AMP_SENSTIVITY, DUR_SENSITIVITY, data_int, power, last_clap_time)
 		current_time = datetime.now()
 		
 		if (clap_present and not first_clap):	
@@ -140,7 +140,7 @@ def visualize_audio_stream(pyaudio_obj):
 			first_clap = False
 
 # determines whether a clap occurred based on magnitude:
-def determine_clap(magnitude_threshold, clap_length, data_int, power, last_clap_time):
+def determine_clap(stream, magnitude_threshold, clap_length, data_int, power, last_clap_time):
 	current_time = datetime.now()
 	time_since_clap = (current_time - last_clap_time).total_seconds()
 
@@ -152,7 +152,16 @@ def determine_clap(magnitude_threshold, clap_length, data_int, power, last_clap_
 	if (np.size(loud_locations) > 0):
 		initial_sound = loud_locations[0][0]
 		last_sound = loud_locations[0][-1]
-		sound_duration = last_sound - initial_sound
+
+		if (last_sound > CHUNK - 200):
+			data_int_2, power_2, freq_2 = process_waveform(stream)
+			loud_locations_2 = np.where(data_int_2 > magnitude_threshold)
+			if (np.size(loud_locations_2) > 0):
+				sound_duration = (loud_locations_2[0][-1] + CHUNK) - initial_sound
+			else:
+				sound_duration = last_sound - initial_sound
+		else:
+			sound_duration = last_sound - initial_sound
 
 		if (sound_duration > clap_length):
 			clap_present = True
@@ -163,7 +172,6 @@ def determine_clap(magnitude_threshold, clap_length, data_int, power, last_clap_
 			clap_present = False
 	else:
 		clap_present = False
-
 
 	return clap_present
 
@@ -187,8 +195,14 @@ def determine_peak_freq(stream, x_freq, freq, power):
 # toggle lights by sending message to arduino over serial
 def toggle_lights():
 		print("toggling lights")
-		mcu = serial.Serial(MCU_SERIAL_PORT, 9600, timeout=1)
-		mcu.write("t".encode())
+		mcu = serial.Serial(MCU_SERIAL_PORT, 9600)
+		mcu.flush()
+		mcu.write('t'.encode('utf-8'))
+
+		# message = mcu.readline().decode('utf-8')
+		# print(message)
+		# sys.stdout.flush()
+		
 		mcu.close()
 
 def main():
