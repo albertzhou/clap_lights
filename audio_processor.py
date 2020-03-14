@@ -16,11 +16,12 @@ import serial
 
 ## Configuration variables - adjust to suit needs
 # audio processor configuration
-AMP_SENSTIVITY = 120 # choose value between 60-124 - loudness threshold for clap
-DUR_SENSITIVITY = 2000 # choose value between 1500-4500 - clap duration threshold
+AMP_SENSTIVITY = 115 # choose value between 60-124 - loudness threshold for clap
+DUR_SENSITIVITY = 3500 # choose value between 1500-4500 - clap duration threshold
+FREQ_CUTOFF = 12500 # fft weighted average taken of frequencies above this cutoff (in Hz)
 
 # Pyaudio configuration
-CHUNK = 1024 * 5 # samples per chunk
+CHUNK = 1024 * 4 # samples per chunk
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100 # 44.1KHZ samples per second
@@ -116,13 +117,14 @@ def audio_stream(pyaudio_obj):
 		peak_freq = determine_peak_freq(stream, x_freq, freq, power)
 		
 		# draw (uncomment block for visualizer)
-		# line.set_ydata(data_int)
-		# line_freq.set_ydata(power / CHUNK) 
-		# fig.canvas.draw()
-		# fig.canvas.flush_events()
-		# plt.show(block=False)
+		line.set_ydata(data_int)
+		line_freq.set_ydata(power / CHUNK) 
+		fig.canvas.draw()
+		fig.canvas.flush_events()
+		plt.show(block=False)
 		
-		# peak_freq = determine_peak_freq(stream, x_freq, freq, power)
+		peak_freq = determine_peak_freq(stream, x_freq, freq, power)
+		determine_clap_fft(power, FREQ_CUTOFF)
 
 		clap_present = determine_clap(stream, AMP_SENSTIVITY, DUR_SENSITIVITY, data_int, power, last_clap_time)
 		current_time = datetime.now()
@@ -138,6 +140,19 @@ def audio_stream(pyaudio_obj):
 		# reset first clap if no second clap within maximum time frame
 		if (time_since_first_clap > 1):
 			first_clap = False
+
+# determines whether a clap occurred based on power, theory that peak frequency/freq band will be 
+# different between clapping and keyboard if low frequencies are truncated
+def determine_clap_fft(power, cutoff=12500):
+	cutoff_samples = round((CHUNK - (cutoff / (RATE / 2) * CHUNK)))
+	power_hf = power[cutoff_samples:] # truncate low frequencies
+	peak_freq_index = np.argmax(power) + (CHUNK - cutoff_samples)
+	
+	peak_freq = (peak_freq_index / CHUNK * (RATE / 2))
+
+	print(peak_freq)
+
+	# print(peak_freq)
 
 # determines whether a clap occurred based on magnitude:
 def determine_clap(stream, magnitude_threshold, clap_length, data_int, power, last_clap_time):
@@ -187,7 +202,7 @@ def process_waveform(stream):
 
 def determine_peak_freq(stream, x_freq, freq, power):
 	pos_mask = np.where(freq > 0) # choose only positive frequencies
-	freq_pos = x_freq[pos_mask] # unused for now
+	freq_pos = x_freq[pos_mask]
 	peak_freq = freq_pos[power[pos_mask].argmax()] # return the frequency with highest magnitude
 
 	return peak_freq
