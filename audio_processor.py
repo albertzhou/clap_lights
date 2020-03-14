@@ -196,6 +196,7 @@ def determine_peak_freq(stream, x_freq, freq, power):
 def toggle_lights():
 		print("toggling lights")
 		mcu = serial.Serial(MCU_SERIAL_PORT, 9600)
+		time.sleep(1)
 		mcu.flush()
 		mcu.write('t'.encode('utf-8'))
 
@@ -203,7 +204,7 @@ def toggle_lights():
 		# print(message)
 		# sys.stdout.flush()
 		
-		mcu.close()
+		# mcu.close()
 
 def main():
 	p = pyaudio.PyAudio()
