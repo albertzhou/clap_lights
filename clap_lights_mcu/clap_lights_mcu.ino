@@ -24,6 +24,5 @@ void loop() {
 }
    if (text[0] == 't') {
       digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-      delay(1000);
   }
 }

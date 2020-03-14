@@ -20,7 +20,7 @@ AMP_SENSTIVITY = 120 # choose value between 60-124 - loudness threshold for clap
 DUR_SENSITIVITY = 2000 # choose value between 1500-4500 - clap duration threshold
 
 # Pyaudio configuration
-CHUNK = 1024 * 10 # samples per chunk
+CHUNK = 1024 * 5 # samples per chunk
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100 # 44.1KHZ samples per second
@@ -71,7 +71,7 @@ def play_wave(pyaudio_obj):
 	# close PyAudio
 	p.terminate()
 
-def visualize_audio_stream(pyaudio_obj):
+def audio_stream(pyaudio_obj):
 
 	stream = pyaudio_obj.open(
 		format=FORMAT,
@@ -196,7 +196,7 @@ def determine_peak_freq(stream, x_freq, freq, power):
 def toggle_lights():
 		print("toggling lights")
 		mcu = serial.Serial(MCU_SERIAL_PORT, 9600)
-		time.sleep(1)
+		time.sleep(0.75)
 		mcu.flush()
 		mcu.write('t'.encode('utf-8'))
 
@@ -209,7 +209,7 @@ def toggle_lights():
 def main():
 	p = pyaudio.PyAudio()
 	# play_wave(p)
-	visualize_audio_stream(p)
+	audio_stream(p)
 
 if __name__ == '__main__':
 	main()
