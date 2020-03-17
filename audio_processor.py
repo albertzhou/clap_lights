@@ -31,7 +31,7 @@ TARGET_IP = "192.168.1.177"
 TARGET_PORT = 23
 
 # Serial Configuration
-MCU_SERIAL_PORT = '/dev/ttyACM0'
+MCU_SERIAL_PORT = '/dev/ttyACM1'
 
 # Numpy configuration
 np.set_printoptions(threshold=sys.maxsize)
@@ -117,11 +117,11 @@ def audio_stream(pyaudio_obj):
 		peak_freq = determine_peak_freq(stream, x_freq, freq, power)
 		
 		# draw (uncomment block for visualizer)
-		line.set_ydata(data_int)
-		line_freq.set_ydata(power / CHUNK) 
-		fig.canvas.draw()
-		fig.canvas.flush_events()
-		plt.show(block=False)
+		# line.set_ydata(data_int)
+		# line_freq.set_ydata(power / CHUNK) 
+		# fig.canvas.draw()
+		# fig.canvas.flush_events()
+		# plt.show(block=False)
 		
 		peak_freq = determine_peak_freq(stream, x_freq, freq, power)
 		determine_clap_fft(power, FREQ_CUTOFF)
@@ -146,11 +146,16 @@ def audio_stream(pyaudio_obj):
 def determine_clap_fft(power, cutoff=12500):
 	cutoff_samples = round((CHUNK - (cutoff / (RATE / 2) * CHUNK)))
 	power_hf = power[cutoff_samples:] # truncate low frequencies
+
+	hf_avg = np.average(power_hf)
+
+	if (hf_avg > 2750):
+		print("clap detected - fft")
+
 	peak_freq_index = np.argmax(power) + (CHUNK - cutoff_samples)
-	
 	peak_freq = (peak_freq_index / CHUNK * (RATE / 2))
 
-	print(peak_freq)
+	# print(peak_freq)
 
 	# print(peak_freq)
 
@@ -181,8 +186,7 @@ def determine_clap(stream, magnitude_threshold, clap_length, data_int, power, la
 		if (sound_duration > clap_length):
 			clap_present = True
 			last_clap_time = current_time
-			# ethernet.send_message(TARGET_IP, TARGET_PORT, "Clap Detected")
-			print("detected a clap")
+			print("clap detected - amp")
 		else:
 			clap_present = False
 	else:
@@ -211,9 +215,9 @@ def determine_peak_freq(stream, x_freq, freq, power):
 def toggle_lights():
 		print("toggling lights")
 		mcu = serial.Serial(MCU_SERIAL_PORT, 9600)
-		time.sleep(0.75)
-		mcu.flush()
+		# time.sleep(2)
 		mcu.write('t'.encode('utf-8'))
+		mcu.flush()
 
 		# message = mcu.readline().decode('utf-8')
 		# print(message)
